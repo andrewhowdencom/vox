@@ -15,7 +15,8 @@ This document outlines the mandatory standards for instrumentation in this repos
 *   **Instrumentation Scope:** Tracers and Meters MUST be named using the fully qualified library name (e.g., `github.com/org/repo/pkg/service`).
 
 ## 3. Semantic Conventions
-*   **Attributes:** All attributes (tags) on spans and metrics MUST follow [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/).
+*   **Attributes:** All attributes (tags) on spans and metrics MUST follow [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/). You MUST use the most recent version (currently `v1.37.0`).
+*   **Forbidden Attributes:** You MUST NOT use `http.url` (or `url.full`) as it frequently includes sensitive data like OAuth tokens or PII. Instead, use `http.path` with appropriate placeholders for variables (e.g., `/users/{userId}`).
 *   **Custom Attributes:** If no standard convention exists, use a consistent namespaced prefix (e.g., `app.your_domain.attribute_name`).
 
 ## 4. Metrics

@@ -1,6 +1,6 @@
 # How-to: Instrument Code
 
-This guide provides practical steps for adding instrumentation to your code.
+This guide provides practical steps for adding instrumentation to your code. For the underlying philosophy and strategy, see [Explanation: Observability Strategy](./explanation-observability-strategy.md).
 
 ## How to Initialize Instrumentation
 
@@ -95,9 +95,9 @@ if err != nil {
 
 ## Instrumenting RPCs
 
-When making remote procedure calls (RPCs), you should mark your spans with the appropriate `SpanKind` (Client or Server) and use standard semantic attributes.
+When making remote procedure calls (RPCs), you should mark your spans with the appropriate `SpanKind` (Client or Server) and use standard semantic attributes. See also [How to Design RPC Interfaces](../rpc/how-to-design-rpc-interfaces.md) for interface design guidelines.
 
-> **Note:** Where possible, prefer using helper functions from semantic convention libraries (e.g., `httpconv` for HTTP) to automatically determine attributes from existing objects.
+> **Note:** Where possible, prefer using helper functions from semantic convention libraries (e.g., `httpconv` for HTTP) to automatically determine attributes from existing objects. Always use the most recent version of semantic conventions (currently `v1.37.0`).
 
 ### gRPC Services
 
@@ -171,7 +171,9 @@ import (
 )
 
 func (c *Client) CallHTTP(req *http.Request) error {
-	// Use httpconv to extract standard attributes like http.method, http.url, etc.
+	// Use httpconv to extract standard attributes like http.method.
+	// NOTE: Ensure `http.url` is NOT recorded as it may contain PII.
+	// Use `http.path` with placeholders instead.
 	attrs := httpconv.ClientRequest(req)
 
 	ctx, span := c.tracer.Start(req.Context(), "HTTP "+req.Method,
@@ -201,6 +203,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 
     // 2. Extract standard server attributes
+    // NOTE: Filter out `http.url` to avoid PII/tokens; use `http.path` with placeholders.
     attrs := httpconv.ServerRequest("my-server", r)
 
     // 3. Start Span
@@ -227,7 +230,7 @@ traceProvider := sdktrace.NewTracerProvider(
 
 ## How to Use Semantic Conventions
 
-Use the `semconv` package to ensure you are using standard attribute names.
+Use the `semconv` package to ensure you are using standard attribute names. Always use the most recent version of the semantic conventions (currently `v1.37.0`).
 
 ```go
 import (
